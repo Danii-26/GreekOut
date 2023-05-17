@@ -152,7 +152,142 @@ public class GUI extends JFrame {
         //anadimos el panel principal con el diseno a la ventana
         getContentPane().add(mainPanel);
     }
+    //Activar o desactivar componentes:
+    private void activarComponentes(Container container, boolean enabled) {
+        Component[] components = container.getComponents();
+        for (Component component : components) {
+            if (component instanceof Container) {
+                // Si el componente es un contenedor, se llama recursivamente al método para habilitar o deshabilitar sus componentes internos
+                activarComponentes((Container) component, enabled);
+            }
+            component.setEnabled(enabled); // Habilitar o deshabilitar el componente
+        }
+    }
 
+    //Puntaje:
+    private void puntaje(){
+        JLabel arrayLabel[] = {dado1, dado2, dado3, dado4, dado5, dado6, dado7, dado8, dado9, dado10};
+        int[] caras = modelCraps.getCaras();
+        for (int i = 0; i < arrayLabel.length; i++) {
+            // Verificar si quedaron dados con la cara de 42 activos
+            if (caras[i]==2 && activos.isAncestorOf(arrayLabel[i] ) && contadorDadosActivos==0) {
+                puntaje++;
+            } else if (caras[i]==4 && activos.isAncestorOf(arrayLabel[i] ) && contadorDadosActivos==0) {
+                puntaje=0;
+                gameText.append("\nPIERDE TODOS SUS PUNTOS.\n Puntaje: "+ puntaje);
+            }
+        }
+        if (contadorDadosActivos == 0 && primerClick==true && puntaje==1){
+            gameText.append("\nSu puntaje fue  1");
+        } else if (contadorDadosActivos == 0 && primerClick==true && puntaje==2) {
+            gameText.append("\nSu puntaje fue de 3");
+        }else if (contadorDadosActivos == 0 && primerClick==true && puntaje==3) {
+            gameText.append("\nSu puntaje fue de 6");
+        }else if (contadorDadosActivos == 0 && primerClick==true && puntaje==4) {
+            gameText.append("\nSu puntaje fue de 10");
+        }else if (contadorDadosActivos == 0 && primerClick==true && puntaje==5) {
+            gameText.append("\nSu puntaje fue de 15");
+        }else if (contadorDadosActivos == 0 && primerClick==true && puntaje==6) {
+            gameText.append("\nSu puntaje fue de 21");
+        }else if (contadorDadosActivos == 0 && primerClick==true && puntaje==7) {
+            gameText.append("\nSu puntaje fue de 28");
+        }else if (contadorDadosActivos == 0 && primerClick==true && puntaje==8) {
+            gameText.append("\nSu puntaje fue de 36");
+        }else if (contadorDadosActivos == 0 && primerClick==true && puntaje==9) {
+            gameText.append("\nSu puntaje fue de 45");
+        }else if (contadorDadosActivos == 0 && primerClick==true && puntaje==10) {
+            gameText.append("\nSu puntaje fue de 55");
+        }
+    }
+    private void reiniciarRonda() {
+        // Restablecer los valores predeterminados de la ronda
+        estado = 0;
+        primerClick = true;
+
+        //  la visibilidad de los componentes y limpiar los paneles
+        containerImage.removeAll();
+        layoutInactivos.removeAll();
+        layoutUsados.removeAll();
+        layoutPuntaje.removeAll();
+        activarComponentes(containerImage, true);
+        activarComponentes(layoutInactivos, false);
+
+        //Añadir los componentes por defecto
+        containerImage.add(dado1);
+        containerImage.add(dado2);
+        containerImage.add(dado3);
+        containerImage.add(dado4);
+        containerImage.add(dado5);
+        containerImage.add(dado6);
+        containerImage.add(dado7);
+        //Se añade el escucha a cada dado activo
+        dado1.removeMouseListener(escucha);
+        dado2.removeMouseListener(escucha);
+        dado3.removeMouseListener(escucha);
+        dado4.removeMouseListener(escucha);
+        dado5.removeMouseListener(escucha);
+        dado6.removeMouseListener(escucha);
+        dado7.removeMouseListener(escucha);
+
+        //Actualizar los paneles
+        containerImage.revalidate();
+        containerImage.repaint();
+        layoutInactivos.revalidate();
+        layoutInactivos.repaint();
+        layoutUsados.revalidate();
+        layoutUsados.repaint();
+        contadorDadosActivos=1;
+    }
+    //Vaciamos dados usados al iniciar la ronda:
+    public void iniciarRonda() {
+        containerImage.revalidate();
+        containerImage.repaint();
+        layoutInactivos.revalidate();
+        layoutInactivos.repaint();
+        layoutUsados.revalidate();
+        layoutUsados.repaint();
+
+        //Se añaden escuchas a dados activos
+        dado1.addMouseListener(escucha);
+        dado2.addMouseListener(escucha);
+        dado3.addMouseListener(escucha);
+        dado4.addMouseListener(escucha);
+        dado5.addMouseListener(escucha);
+        dado6.addMouseListener(escucha);
+        dado7.addMouseListener(escucha);
+    }
+
+    //Contamos los dados activos
+    public void contadorDados() {
+        JLabel arrayLabel[] = {dado1, dado2, dado3, dado4, dado5, dado6, dado7, dado8, dado9, dado10};
+        int[] caras = modelCraps.getCaras();
+        int cantidadDadosActivos=0;
+
+        for (int i = 0; i < arrayLabel.length; i++) {
+            //Revisa si la cara del dado no es 4 ni 2
+            if (caras[i] != 4 && caras[i] != 2 && activos.isAncestorOf(arrayLabel[i])) {
+                cantidadDadosActivos++;
+                System.out.println(cantidadDadosActivos);
+            }
+        }
+        contadorDadosActivos = cantidadDadosActivos;
+        if (contadorDadosActivos == 0 && primerClick==true) {
+            JOptionPane.showMessageDialog(null, "Reinicie la ronda y tire otra vez");
+            continuar.setEnabled(true); //Activa el botón cambio de ronda
+            ronda++;
+            puntaje();
+            contadorRondas();
+        }
+    }
+
+    //Cuenta las rondas jugadas
+    private void contadorRondas(){
+        if (ronda==5 && puntaje<8){
+            JOptionPane.showMessageDialog(null, "HAS PERDIDO!");
+        } else if (ronda == 5 && puntaje >= 8) {
+            JOptionPane.showMessageDialog(null, "VICTORIA MAGISTRAL! ");
+        }
+    }
 
 
 }
