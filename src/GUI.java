@@ -288,7 +288,202 @@ public class GUI extends JFrame {
             JOptionPane.showMessageDialog(null, "VICTORIA MAGISTRAL! ");
         }
     }
+    public static void main(String[] args) {
 
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                GUI myGUI = new GUI();
+            }
+        });
+    }
+    private class Escucha implements ActionListener, MouseListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            //Mostramos la cantidad de rondas
+            if (e.getSource()== iniciar){
+                gameText.append("\nRonda "+ronda+"\n");
+            }
+            //Reiniciamos la ronda y activamos los botones.
+            if (e.getSource() == continuar && contadorDadosActivos==0) {
+                iniciar.setEnabled(true);
+                continuar.setEnabled(false); //Desctiva el botón cambio de ronda
+                reiniciarRonda();
+            }
+
+            //Primer tiro de dados
+            if (e.getSource() == iniciar) {
+                continuar.setEnabled(false); //Desctiva el botón cambio de ronda
+                iniciar.setEnabled(false);//Desctiva el botón tiro de dados
+                JLabel arrayLabels[] = {dado1, dado2, dado3, dado4, dado5, dado6, dado7, dado8, dado9, dado10};
+                int[] caras = modelCraps.getCaras();
+                modelCraps.obtenerValorCaras();
+                for (int i = 0; i < arrayLabels.length; i++) {
+                    if (i >= 7) {
+                        caraDado = new ImageIcon(getClass().getResource("/recursos/dado" + caras[i] + ".png"));
+                        arrayLabels[i].setIcon(caraDado);
+                        layoutInactivos.add(arrayLabels[i]);
+                        activarComponentes(layoutInactivos, false);
+                    } else {
+                        caraDado = new ImageIcon(getClass().getResource("/recursos/dado" + caras[i] + ".png"));
+                        arrayLabels[i].setIcon(caraDado);
+                        containerImage.add(arrayLabels[i]);
+                        activarComponentes(activos, true);
+                    }
+                }
+                contadorDados();
+                iniciarRonda();
+            }
+        }
+        @Override
+        //Evento de click sobre un dado:
+        public void mouseClicked(MouseEvent e) {
+            JLabel arrayLabel[] = {dado1, dado2, dado3, dado4, dado5, dado6, dado7, dado8, dado9, dado10};
+            int[] caras = modelCraps.getCaras();
+
+            for (int i = 0; i < arrayLabel.length; i++) {
+                if (e.getSource() == arrayLabel[i]) {
+                    if (primerClick) {
+                        //Meeple:
+                        if (caras[i] == 1) {
+                            JOptionPane.showMessageDialog(null, "Usa el efecto MEEPLE");
+                            arrayLabel[i].removeMouseListener(this);
+                            containerImage.remove(arrayLabel[i]);
+                            layoutUsados.add(arrayLabel[i]);
+                            containerImage.revalidate();
+                            containerImage.repaint();
+                            estado= 1;
+                            primerClick = false;
+                            contadorDados();
+                        }
+                        //Cohete
+                        if (caras[i] == 6) {
+                            JOptionPane.showMessageDialog(null, "Destruye un dado activo");
+                            arrayLabel[i].removeMouseListener(this);
+                            containerImage.remove(arrayLabel[i]);
+                            containerImage.revalidate();
+                            containerImage.repaint();
+                            layoutUsados.add(arrayLabel[i]);
+                            estado= 6;
+                            primerClick = false;
+                            contadorDados();
+                        }
+                        //Corazón
+                        if (caras[i] == 5) {
+                            JOptionPane.showMessageDialog(null, "Activa un dado inactivo");
+                            arrayLabel[i].removeMouseListener(this);
+                            dado8.addMouseListener(escucha);
+                            dado9.addMouseListener(escucha);
+                            dado10.addMouseListener(escucha);
+                            containerImage.remove(arrayLabel[i]);
+                            layoutUsados.add(arrayLabel[i]);
+                            containerImage.revalidate();
+                            containerImage.repaint();
+                            activarComponentes(layoutInactivos, true);
+                            activarComponentes(containerImage, false);
+                            estado= 5;
+                            primerClick = false;
+                            contadorDados();
+                        }
+                        //Héroe
+                        if (caras[i] == 3) {
+                            JOptionPane.showMessageDialog(null, "Gira la cara de un dado activo");
+                            arrayLabel[i].removeMouseListener(this);
+                            containerImage.remove(arrayLabel[i]);
+                            layoutUsados.add(arrayLabel[i]);
+                            containerImage.revalidate();
+                            containerImage.repaint();
+                            estado= 3;
+                            primerClick = false;
+                            contadorDados();
+                        }
+                    } else {
+                        //Meeple
+                        if (e.getSource() == arrayLabel[i] && estado == 1) {
+                            JOptionPane.showMessageDialog(null, "Efecto meeple activado");
+                            caras[i]=dice.getFace();
+                            caraDado = new ImageIcon(getClass().getResource("/recursos/dado" + caras[i] + ".png"));
+                            arrayLabel[i].setIcon(caraDado);
+                            // arrayLabel[i].addMouseListener(this);
+                            containerImage.revalidate();
+                            containerImage.repaint();
+                            estado=0;
+                            primerClick = true;
+                            contadorDados();
+                        }
+                        //Cohete
+                        if (e.getSource() == arrayLabel[i] && estado == 6) {
+                            JOptionPane.showMessageDialog(null, "Dado destruido!");
+                            containerImage.remove(arrayLabel[i]);
+                            containerImage.repaint();
+                            layoutInactivos.add(arrayLabel[i]);
+                            layoutInactivos.revalidate();
+                            layoutInactivos.repaint();
+                            activarComponentes(layoutInactivos, false);
+                            estado=0;
+                            primerClick = true;
+                            contadorDados();
+                        }
+                        //Corazón
+                        if (e.getSource() == arrayLabel[i] && estado == 5) {
+                            JOptionPane.showMessageDialog(null, "Dado activado!");
+                            arrayLabel[i].addMouseListener(this);
+                            caras[i] = dice.getFace();
+                            caraDado = new ImageIcon(getClass().getResource("/recursos/dado" + caras[i] + ".png"));
+                            arrayLabel[i].setIcon(caraDado);
+                            layoutInactivos.remove(arrayLabel[i]);
+                            layoutInactivos.revalidate();
+                            layoutInactivos.repaint();
+                            containerImage.add(arrayLabel[i]);
+                            containerImage.revalidate();
+                            activarComponentes(containerImage, true);
+                            activarComponentes(layoutInactivos, false);
+                            dado8.removeMouseListener(this);
+                            dado9.removeMouseListener(this);
+                            dado10.removeMouseListener(this);
+                            estado = 0;
+                            primerClick = true;
+                            contadorDados();
+                        }
+                        //Héroe
+                        if (e.getSource() == arrayLabel[i] && estado == 3) {
+                            JOptionPane.showMessageDialog(null, "Dado volteado!");
+                            int caraOpuesta=7;
+                            int resta= caraOpuesta-caras[i];
+                            caras[i]= resta;
+                            caraDado = new ImageIcon(getClass().getResource("/recursos/dado" + caras[i] + ".png"));
+                            arrayLabel[i].setIcon(caraDado);
+                            containerImage.revalidate();
+                            containerImage.repaint();
+                            estado=0;
+                            primerClick = true;
+                            contadorDados();
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        @Override
+        public void mousePressed(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+
+        }
+    }
 
 }
 
